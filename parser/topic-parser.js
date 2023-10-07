@@ -13,7 +13,7 @@ const parseTopic = (topic, message) => {
 
     // return object accordingly
 
-    let result = {devTopic: topics[0]}
+    let result = {deviceTopic: topics[0]}
 
     if(topics.length === 3) {
         const key = topics[2]

@@ -1,5 +1,6 @@
 const mqtt = require('mqtt')
 const {parseTopic} = require("./parser/topic-parser")
+const {throttle} = require("lodash");
 
 const port = process.env.PORT || 3001;
 
@@ -7,17 +8,27 @@ const MQTT_BROKER = process.env.MQTT_BROKER || "mqtt://13.38.173.241:1883"
 
 
 const server = require('http').createServer();
-const io = require('socket.io')(server);
+const io = require('socket.io')(server, {
+    cors: {
+        origin: "http://localhost:3000"
+    }
+});
 
 const mqttClient = mqtt.connect(MQTT_BROKER)
 
 mqttClient.on("connect", () => {
     console.log("connected to MQTT")
-    mqttClient.subscribe("#")
+    mqttClient.subscribe("uav1/#")
+    mqttClient.subscribe("uav2/#")
 
 
 
 })
+
+
+const throttledEmit = throttle((parsed)=>{
+    io.sockets.emit("msg", parsed)
+}, 50)
 
 
 
@@ -27,7 +38,7 @@ mqttClient.on("message", (topic, payload) => {
 
     const parsed = parseTopic(topic, payload.toString())
 
-    io.sockets.emit("msg", parsed)
+    throttledEmit(parsed)
 
     // console.log(parsed)
 
